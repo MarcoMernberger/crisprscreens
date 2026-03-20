@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from crispr_screens.core.qc import (
+from crisprscreens.core.qc import (
     load_control_sgrnas,
     parse_condition_replicate,
     read_counts,

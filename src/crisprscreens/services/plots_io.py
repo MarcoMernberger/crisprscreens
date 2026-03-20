@@ -1,5 +1,5 @@
 import pandas as pd
-from crispr_screens.core.plots import (
+from crisprscreens.core.plots import (
     plot_selected_venn,
     volcano_plot,
     plot_ranking_metric_heatmaps,

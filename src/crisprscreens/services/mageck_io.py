@@ -1,7 +1,7 @@
 import pandas as pd  # type: ignore
 from typing import Dict, Optional, Union, List, Tuple, Callable, Any, Iterable
 from pathlib import Path
-from crispr_screens.core.mageck import (
+from crisprscreens.core.mageck import (
     filter_multiple_mageck_comparisons,
     combine_comparisons,
     split_frame_to_control_and_query,
@@ -9,8 +9,8 @@ from crispr_screens.core.mageck import (
     get_significant_genes,
     filter_mageck_counts,
 )
-from crispr_screens.core.mageck_spikein import create_spiked_count_table
-from crispr_screens.core.qc import (
+from crisprscreens.core.mageck_spikein import create_spiked_count_table
+from crisprscreens.core.qc import (
     read_counts,
     calculate_norm_cpms_and_ma,
     calculate_size_factors_for_method,

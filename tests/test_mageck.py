@@ -8,7 +8,7 @@ import pytest
 import pandas as pd
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from crispr_screens.core.mageck import (
+from crisprscreens.core.mageck import (
     combine_comparisons,
     filter_multiple_mageck_comparisons,
     split_frame_to_control_and_query,
@@ -180,7 +180,7 @@ class TestMageckWrappers:
     @patch('subprocess.run')
     def test_mageck_pathway_basic_call(self, mock_run):
         """Test basic mageck_pathway wrapper call."""
-        from crispr_screens.core.mageck import mageck_pathway
+        from crisprscreens.core.mageck import mageck_pathway
 
         # Mock subprocess result
         mock_run.return_value = MagicMock(
@@ -209,7 +209,7 @@ class TestMageckWrappers:
     @patch('subprocess.run')
     def test_mageck_plot_basic_call(self, mock_run):
         """Test basic mageck_plot wrapper call."""
-        from crispr_screens.core.mageck import mageck_plot
+        from crisprscreens.core.mageck import mageck_plot
 
         mock_run.return_value = MagicMock(
             stdout="Success",

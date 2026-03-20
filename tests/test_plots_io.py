@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
-from crispr_screens.services.plots_io import (
+from crisprscreens.services.plots_io import (
     write_venn,
     write_volcano_plot,
 )

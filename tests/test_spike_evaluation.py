@@ -9,7 +9,7 @@ import sys
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from crispr_screens.services.spike_evaluation import (
+from crisprscreens.services.spike_evaluation import (
     classify_spike_genes,
     calculate_precision_recall,
     calculate_separation_metrics,

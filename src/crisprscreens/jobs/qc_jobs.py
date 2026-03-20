@@ -11,12 +11,12 @@ from pypipegraph2 import (
 )
 from pathlib import Path
 from typing import List, Union, Optional, Dict
-from crispr_screens.services.io import (
+from crisprscreens.services.io import (
     generate_control_qc_report,
     standard_qc_report,
     mageck_report,
 )
-from crispr_screens.core.qc import (
+from crisprscreens.core.qc import (
     export_control_counts_and_cpm,
     generate_standard_qc_report,
     compute_size_factors_total,
@@ -27,7 +27,7 @@ from crispr_screens.core.qc import (
     choose_best_normalization,
     recommend_analysis_method,
 )
-from crispr_screens.services.io import write_rankings
+from crisprscreens.services.io import write_rankings
 
 
 def control_qc_job(
@@ -632,8 +632,8 @@ def mageck_report_job(
     job.job_id = job_id
 
     # Add function invariants
-    from crispr_screens.core.mageck_report import generate_mageck_report
-    from crispr_screens.core.plots import (
+    from crisprscreens.core.mageck_report import generate_mageck_report
+    from crisprscreens.core.plots import (
         volcano_plot,
         plot_effect_size_vs_reproducibility,
         plot_rank_stability,
@@ -812,7 +812,7 @@ def pairing_qc_job(
     MultiFileGeneratingJob
         Job generating QC report files
     """
-    from crispr_screens.core.pairing_qc import comprehensive_pairing_qc
+    from crisprscreens.core.pairing_qc import comprehensive_pairing_qc
 
     output_dir = Path(output_dir)
 
@@ -855,7 +855,7 @@ def pairing_qc_job(
     job = MultiFileGeneratingJob(outfiles, __dump).depends_on(*dependencies)
 
     # Add function invariants
-    from crispr_screens.core.pairing_qc import (
+    from crisprscreens.core.pairing_qc import (
         replicate_gene_ranking_consistency,
         run_paired_unpaired_comparison,
         downsampling_stability_qc,
@@ -972,7 +972,7 @@ def pairing_qc_job(
 #     ...     generate_pdf=True,
 #     ... )
 #     """
-#     from crispr_screens.models import QCReport, QCConfig
+#     from crisprscreens.models import QCReport, QCConfig
 
 #     output_dir = Path(output_dir)
 #     count_table = Path(count_table)
@@ -1027,7 +1027,7 @@ def pairing_qc_job(
 #     ).depends_on(*dependencies)
 
 #     # Add function invariants for QC functions
-#     from crispr_screens.core import qc
+#     from crisprscreens.core import qc
 
 #     job.depends_on(
 #         FunctionInvariant("qc.load_control_sgrnas", qc.load_control_sgrnas)
@@ -1100,7 +1100,7 @@ def pairing_qc_plots_job(
     MultiFileGeneratingJob
         Job generating plot files
     """
-    from crispr_screens.services.io import (
+    from crisprscreens.services.io import (
         write_replicate_correlation_heatmap,
         write_top_n_overlap_heatmap,
         write_paired_vs_unpaired_scatter,
@@ -1199,7 +1199,7 @@ def pairing_qc_plots_job(
     job = MultiFileGeneratingJob(outfiles, __dump).depends_on(*dependencies)
 
     # Add function invariants
-    from crispr_screens.core.qc_plots import (
+    from crisprscreens.core.qc_plots import (
         plot_replicate_correlation_heatmap,
         plot_top_n_overlap_heatmap,
         plot_paired_vs_unpaired_scatter,

@@ -16,11 +16,11 @@ Date: 2026-01-28
 
 import pypipegraph2 as ppg
 from pathlib import Path
-from crispr_screens import (
+from crisprscreens import (
     mageck_method_comparison_job,
     mageck_count_job,
 )
-from crispr_screens.core.mageck import mageck_test, mageck_mle
+from crisprscreens.core.mageck import mageck_test, mageck_mle
 
 # Initialize PyPipeGraph
 ppg.new()
@@ -192,7 +192,7 @@ Next steps:
 
 # Example: Only run leave-one-out for two specific methods
 if False:  # Set to True to run
-    from crispr_screens import leave_one_replicate_out_job
+    from crisprscreens import leave_one_replicate_out_job
 
     rra_loo_job = leave_one_replicate_out_job(
         count_table=str(count_table),
@@ -223,7 +223,7 @@ if False:  # Set to True to run
 
 # Example: Only check control false positives
 if False:  # Set to True to run
-    from crispr_screens import control_false_positive_job
+    from crisprscreens import control_false_positive_job
 
     rra_fp_job = control_false_positive_job(
         gene_summary="results/mageck_test/sorted_vs_unsorted/RRA.gene_summary.tsv",
@@ -235,7 +235,7 @@ if False:  # Set to True to run
 
 # Example: Only run sgRNA coherence
 if False:  # Set to True to run
-    from crispr_screens import sgrna_coherence_job
+    from crisprscreens import sgrna_coherence_job
 
     mle_coherence_job = sgrna_coherence_job(
         gene_summary="results/mageck_mle/sorted_vs_unsorted/MLE.gene_summary.tsv",

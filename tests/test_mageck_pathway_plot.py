@@ -4,8 +4,8 @@ import types
 
 import pytest
 
-from crispr_screens.core import mageck
-from crispr_screens.services import io
+from crisprscreens.core import mageck
+from crisprscreens.services import io
 
 
 class FakeCompleted:

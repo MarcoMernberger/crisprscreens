@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use("Agg")
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from crispr_screens.services.io import (
+from crisprscreens.services.io import (
     save_figure,
     read_dataframe,
     generate_control_qc_report,
@@ -280,7 +280,7 @@ class TestMageckWrappers:
     @patch("subprocess.run")
     def test_mageck_pathway_wrapper(self, mock_run, tmp_path):
         """Test mageck_pathway service wrapper."""
-        from crispr_screens.services.io import mageck_pathway
+        from crisprscreens.services.io import mageck_pathway
 
         mock_run.return_value = MagicMock(
             stdout="Success", stderr="", returncode=0
@@ -312,7 +312,7 @@ class TestMageckWrappers:
     @patch("subprocess.run")
     def test_mageck_plot_wrapper(self, mock_run, tmp_path):
         """Test mageck_plot service wrapper."""
-        from crispr_screens.services.io import mageck_plot
+        from crisprscreens.services.io import mageck_plot
 
         mock_run.return_value = MagicMock(
             stdout="Success", stderr="", returncode=0

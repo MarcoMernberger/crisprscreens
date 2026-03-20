@@ -10,7 +10,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pathlib import Path
-from crispr_screens.core.mageck_report import generate_mageck_report
+from crisprscreens.core.mageck_report import generate_mageck_report
 
 
 # Test data paths

@@ -81,7 +81,7 @@ def test_basic_functionality():
     """Test basic import and function availability."""
     print("Testing imports...")
 
-    qc_mod = importlib.import_module("crispr_screens.core.qc")
+    qc_mod = importlib.import_module("crisprscreens.core.qc")
     required_names = [
         "control_sgrna_qc",
         "generate_control_qc_report",
@@ -100,12 +100,12 @@ def test_basic_functionality():
 
     print("✓ All core functions available on module")
 
-    qc_mod = importlib.import_module("crispr_screens.jobs.qc_jobs")
+    qc_mod = importlib.import_module("crisprscreens.jobs.qc_jobs")
     qc_mod.control_qc_job
 
     print("✓ Job function imported successfully")
 
-    pkg = importlib.import_module("crispr_screens")
+    pkg = importlib.import_module("crisprscreens")
     if not hasattr(pkg, "control_qc_job"):
         raise ImportError(
             f"Missing attribute in {pkg.__name__}: control_qc_job"
@@ -121,7 +121,7 @@ def test_with_mock_data():
     """Test QC analysis with mock data."""
     print("\nTesting with mock data...")
 
-    from crispr_screens.core.qc import control_sgrna_qc
+    from crisprscreens.core.qc import control_sgrna_qc
 
     # Create mock data
     count_df, control_ids = create_mock_data()
@@ -206,7 +206,7 @@ def test_full_report_generation():
     """Test full report generation with file output."""
     print("\nTesting full report generation...")
 
-    from crispr_screens.core.qc import generate_control_qc_report
+    from crisprscreens.core.qc import generate_control_qc_report
 
     # Create temporary directory
     temp_dir = Path(tempfile.mkdtemp())

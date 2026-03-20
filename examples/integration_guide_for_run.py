@@ -6,8 +6,8 @@ Füge diesen Code zu deinem run.py hinzu um RRA und MLE zu vergleichen.
 
 import pypipegraph2 as ppg
 from pathlib import Path
-from crispr_screens import mageck_method_comparison_job
-from crispr_screens.core.mageck import mageck_test, mageck_mle
+from crisprscreens import mageck_method_comparison_job
+from crisprscreens.core.mageck import mageck_test, mageck_mle
 
 # Paths (passe diese an!)
 count_table = "results/mageck_count/brunello.count.txt"
@@ -109,9 +109,9 @@ Nach dem Run:
 3. Wähle die Methode mit den besten Overall-Metriken
 
 4. Dokumentation:
-   - Quick Start: code/crispr_screens/docs/method_comparison_quickstart.md
-   - Ausführlich: code/crispr_screens/docs/method_comparison_guide.md
-   - Beispiel: code/crispr_screens/examples/method_comparison_example.py
+   - Quick Start: code/crisprscreens/docs/method_comparison_quickstart.md
+   - Ausführlich: code/crisprscreens/docs/method_comparison_guide.md
+   - Beispiel: code/crisprscreens/examples/method_comparison_example.py
 
 5. Typische Interpretation:
    

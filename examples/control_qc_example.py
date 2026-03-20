@@ -6,11 +6,11 @@ and integrated with pypipegraph workflows.
 """
 
 from pathlib import Path
-from crispr_screens.core.qc import (
+from crisprscreens.core.qc import (
     control_sgrna_qc,
     generate_control_qc_report,
 )
-from crispr_screens.jobs.qc_jobs import control_qc_job
+from crisprscreens.jobs.qc_jobs import control_qc_job
 
 
 def example_standalone_analysis():
@@ -105,7 +105,7 @@ def example_pypipegraph_integration():
     This would typically be added to your main run.py script.
     """
     import pypipegraph2 as ppg2
-    from crispr_screens.jobs.mageck_jobs import mageck_count_job
+    from crisprscreens.jobs.mageck_jobs import mageck_count_job
 
     # Initialize pypipegraph
     ppg2.new_pipeline()

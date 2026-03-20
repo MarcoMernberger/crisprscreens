@@ -11,7 +11,7 @@ from pypipegraph2 import (
 from pandas import DataFrame
 from pathlib import Path
 from typing import List, Union, Optional, Dict, Callable
-from crispr_screens.core.method_comparison import (
+from crisprscreens.core.method_comparison import (
     leave_one_replicate_out_analysis,
     analyze_sgrna_coherence,
     analyze_control_false_positives,
@@ -19,7 +19,7 @@ from crispr_screens.core.method_comparison import (
     compare_mageck_methods,
     compare_rankings_simple,
 )
-from crispr_screens.core.mageck import mageck_test, mageck_mle
+from crisprscreens.core.mageck import mageck_test, mageck_mle
 
 
 def leave_one_replicate_out_job(
@@ -71,7 +71,7 @@ def leave_one_replicate_out_job(
 
     Examples
     --------
-    >>> from crispr_screens.core.mageck import mageck_test
+    >>> from crisprscreens.core.mageck import mageck_test
     >>> job = leave_one_replicate_out_job(
     ...     count_table="results/counts.txt",
     ...     control_ids=["Total_Rep1", "Total_Rep2", "Total_Rep3"],
@@ -336,7 +336,7 @@ def permutation_test_job(
 
     Examples
     --------
-    >>> from crispr_screens.core.mageck import mageck_mle
+    >>> from crisprscreens.core.mageck import mageck_mle
     >>> job = permutation_test_job(
     ...     count_table="results/counts.txt",
     ...     control_ids=["Total_Rep1", "Total_Rep2", "Total_Rep3"],
@@ -470,7 +470,7 @@ def mageck_method_comparison_job(
 
     Examples
     --------
-    >>> from crispr_screens.core.mageck import mageck_test, mageck_mle
+    >>> from crisprscreens.core.mageck import mageck_test, mageck_mle
     >>>
     >>> methods = {
     ...     'RRA_paired_median': {
@@ -514,7 +514,7 @@ def mageck_method_comparison_job(
 
     # Default methods if not provided
     if methods is None:
-        from crispr_screens.core.mageck import mageck_test, mageck_mle
+        from crisprscreens.core.mageck import mageck_test, mageck_mle
 
         methods = {
             "RRA_paired_median": {

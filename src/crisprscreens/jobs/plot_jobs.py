@@ -7,12 +7,12 @@ from pypipegraph2 import (
 )
 from pathlib import Path
 from typing import Dict, Optional, Union, List, Tuple
-from crispr_screens.services.plots_io import (
+from crisprscreens.services.plots_io import (
     write_venn,
     write_volcano_plot,
     create_plot_ranking_metric_heatmaps,
 )
-from crispr_screens.core.plots import volcano_plot
+from crisprscreens.core.plots import volcano_plot
 from pandas import DataFrame  # noqa F401
 
 

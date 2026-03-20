@@ -14,7 +14,7 @@ import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend for tests
 import matplotlib.pyplot as plt
 from pathlib import Path
-from crispr_screens.core.plots import (
+from crisprscreens.core.plots import (
     volcano_plot,
     plot_control_distribution_per_condition,
     plot_pairwise_control_shifts,

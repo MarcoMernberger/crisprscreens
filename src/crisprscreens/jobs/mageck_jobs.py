@@ -17,7 +17,7 @@ from typing import (
     Any,
     Iterable,
 )
-from crispr_screens.services.mageck_io import (
+from crisprscreens.services.mageck_io import (
     write_filtered_mageck_comparison,
     combine_comparison_output,
     create_query_control_sgrna_frames,
@@ -27,14 +27,14 @@ from crispr_screens.services.mageck_io import (
     write_filter_mageck_counts,
     write_count_table_with_MA_CPM,
 )
-from crispr_screens.services.spike_evaluation import (
+from crisprscreens.services.spike_evaluation import (
     evaluate_multiple_mageck_results,
     rank_mageck_methods,
 )
-from crispr_screens.r_integration.mageck_wrapper import run_mageck_scatterview
-from crispr_screens.core.mageck import mageck_count, mageck_test, mageck_mle, mageck_count2
+from crisprscreens.r_integration.mageck_wrapper import run_mageck_scatterview
+from crisprscreens.core.mageck import mageck_count, mageck_test, mageck_mle, mageck_count2
 from pandas import DataFrame
-from crispr_screens.services.io import generate_spike_evaluation_report
+from crisprscreens.services.io import generate_spike_evaluation_report
 import numpy as np
 import shutil
 

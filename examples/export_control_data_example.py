@@ -15,7 +15,7 @@ from pathlib import Path
 
 def example_standalone():
     """Export control data without pypipegraph."""
-    from crispr_screens.core.qc import export_control_counts_and_cpm
+    from crisprscreens.core.qc import export_control_counts_and_cpm
 
     files = export_control_counts_and_cpm(
         count_table="results/mageck_count/all/counts.count.tsv",
@@ -55,7 +55,7 @@ def example_standalone():
 def example_pypipegraph():
     """Integrate control data export into pypipegraph workflow."""
     import pypipegraph2 as ppg2
-    from crispr_screens import export_control_data_job
+    from crisprscreens import export_control_data_job
 
     # Initialize pypipegraph
     ppg2.new_pipeline()
@@ -82,7 +82,7 @@ def example_pypipegraph():
 
 def example_combined():
     """Export data and run QC together."""
-    from crispr_screens.core.qc import (
+    from crisprscreens.core.qc import (
         export_control_counts_and_cpm,
         generate_control_qc_report,
     )
@@ -181,7 +181,7 @@ def example_verify_cpm():
 def example_full_workflow():
     """Complete workflow: export data + QC analysis."""
     import pypipegraph2 as ppg2
-    from crispr_screens import export_control_data_job, control_qc_job
+    from crisprscreens import export_control_data_job, control_qc_job
 
     ppg2.new_pipeline()
 
@@ -233,5 +233,5 @@ if __name__ == "__main__":
     print("✓ Examples complete")
     print("=" * 60)
     print("\n💡 Usage in your workflow:")
-    print("   from crispr_screens import export_control_data_job")
+    print("   from crisprscreens import export_control_data_job")
     print("   export_job = export_control_data_job(...)")

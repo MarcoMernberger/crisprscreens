@@ -8,7 +8,7 @@ import pytest
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from crispr_screens.services.mageck_io import (
+from crisprscreens.services.mageck_io import (
     write_filtered_mageck_comparison,
     combine_comparison_output,
     create_query_control_sgrna_frames,

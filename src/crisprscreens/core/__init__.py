@@ -1,5 +1,5 @@
 """
-Core domain logic for crispr_screens.
+Core domain logic for crisprscreens.
 This core subpackage contains ...
 """
 

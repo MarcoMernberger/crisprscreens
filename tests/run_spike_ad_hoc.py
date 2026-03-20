@@ -1,4 +1,4 @@
-from crispr_screens.services.spike_evaluation import (
+from crisprscreens.services.spike_evaluation import (
     evaluate_multiple_mageck_results,
 )
 import pandas as pd

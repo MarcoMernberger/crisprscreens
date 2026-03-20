@@ -4,22 +4,22 @@ from pathlib import Path
 from typing import Union, List, Dict, Optional, Tuple
 from pandas import DataFrame  # type: ignore
 
-from crispr_screens.core.qc import (
+from crisprscreens.core.qc import (
     control_sgrna_qc,
     export_control_counts_and_cpm,
     generate_standard_qc_report as _generate_standard_qc_report,
     calculate_ranking_metrics,
 )
-from crispr_screens.core.mageck_report import (
+from crisprscreens.core.mageck_report import (
     generate_mageck_report as _generate_mageck_report,
 )
-from crispr_screens.core.plots import (
+from crisprscreens.core.plots import (
     plot_control_distribution_per_condition,
     plot_control_pca,
     plot_control_replicate_correlation,
     plot_pairwise_control_shifts,
 )
-from crispr_screens.core.mageck import (
+from crisprscreens.core.mageck import (
     mageck_pathway as _mageck_pathway,
     mageck_plot as _mageck_plot,
 )
@@ -73,7 +73,7 @@ def save_figure(f, folder, name, bbox_inches="tight"):
 #     dict
 #         QC results with file paths.
 #     """
-#     from crispr_screens.core.qc import generate_control_qc_report
+#     from crisprscreens.core.qc import generate_control_qc_report
 
 #     return generate_control_qc_report(
 #         count_table=count_table,
@@ -248,7 +248,7 @@ def generate_spike_evaluation_report(
     # Ensure composite score and rank exist (compute if necessary)
     if "composite_score" not in df.columns or "rank" not in df.columns:
         try:
-            from crispr_screens.services.spike_evaluation import (
+            from crisprscreens.services.spike_evaluation import (
                 rank_mageck_methods,
             )
 
@@ -761,7 +761,7 @@ def write_replicate_correlation_heatmap(
     fmt: str = ".3f",
 ):
     """Write replicate correlation heatmap to file."""
-    from crispr_screens.core.qc_plots import plot_replicate_correlation_heatmap
+    from crisprscreens.core.qc_plots import plot_replicate_correlation_heatmap
 
     if isinstance(correlation_matrix, (str, Path)):
         correlation_matrix = read_dataframe(correlation_matrix)
@@ -796,7 +796,7 @@ def write_top_n_overlap_heatmap(
     fmt: str = ".3f",
 ):
     """Write top-N overlap heatmap to file."""
-    from crispr_screens.core.qc_plots import plot_top_n_overlap_heatmap
+    from crisprscreens.core.qc_plots import plot_top_n_overlap_heatmap
 
     if isinstance(overlap_matrix, (str, Path)):
         overlap_matrix = read_dataframe(overlap_matrix)
@@ -831,7 +831,7 @@ def write_paired_vs_unpaired_scatter(
     highlight_color: str = "red",
 ):
     """Write paired vs unpaired scatter plot to file."""
-    from crispr_screens.core.qc_plots import plot_paired_vs_unpaired_scatter
+    from crisprscreens.core.qc_plots import plot_paired_vs_unpaired_scatter
 
     if isinstance(paired_results, (str, Path)):
         paired_results = read_dataframe(paired_results)
@@ -863,7 +863,7 @@ def write_downsampling_stability_plot(
     color: str = "steelblue",
 ):
     """Write downsampling stability plot to file."""
-    from crispr_screens.core.qc_plots import plot_downsampling_stability
+    from crisprscreens.core.qc_plots import plot_downsampling_stability
 
     if isinstance(stability_df, (str, Path)):
         stability_df = read_dataframe(stability_df)
@@ -890,7 +890,7 @@ def write_positive_control_ranks_plot(
     highlight_color: str = "red",
 ):
     """Write positive control ranks plot to file."""
-    from crispr_screens.core.qc_plots import plot_positive_control_ranks
+    from crisprscreens.core.qc_plots import plot_positive_control_ranks
 
     if isinstance(gene_summary, (str, Path)):
         gene_summary = read_dataframe(gene_summary)
@@ -921,7 +921,7 @@ def write_pairing_decision_summary_plot(
     figsize: Tuple[float, float] = (10, 6),
 ):
     """Write pairing decision summary plot to file."""
-    from crispr_screens.core.qc_plots import plot_pairing_decision_summary
+    from crisprscreens.core.qc_plots import plot_pairing_decision_summary
     import json
 
     if isinstance(recommendation_dict, (str, Path)):

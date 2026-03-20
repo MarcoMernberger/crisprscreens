@@ -5,7 +5,7 @@ This script demonstrates how to use the refactored report classes
 for comprehensive CRISPR screen analysis.
 """
 
-from crispr_screens.models import QCReport, QCConfig, ResultReport, ReportConfig
+from crisprscreens.models import QCReport, QCConfig, ResultReport, ReportConfig
 
 
 def run_comprehensive_qc_analysis(

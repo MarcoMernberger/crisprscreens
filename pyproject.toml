@@ -3,8 +3,8 @@ requires = ["hatchling>=1.25.0"]
 build-backend = "hatchling.build"
 
 [project]
-name = "crispr_screens"
-version = "0.1.1"
+name = "crisprscreens"
+version = "0.2.0"
 description = "This is a set of helper tools (e.g. Mageck helper) to analyse CRISPR screens"
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
@@ -61,7 +61,7 @@ ignore = ["E501"]  # Black regelt line-length
 exclude = [".venv", "build", "dist", ".git", ".mypy_cache", ".ruff_cache"]
 
 [tool.ruff.isort]
-known-first-party = ["crispr_screens"]
+known-first-party = ["crisprscreens"]
 
 # --- pytest ---
 [tool.pytest.ini_options]
@@ -82,7 +82,7 @@ warn_unused_ignores = true
 
 # --- coverage ---
 [tool.coverage.run]
-source = ["crispr_screens"]
+source = ["crisprscreens"]
 branch = true
 
 [tool.coverage.report]

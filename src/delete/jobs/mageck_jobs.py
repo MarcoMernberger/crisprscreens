@@ -1,11 +1,11 @@
 from pypipegraph2 import Job, FileGeneratingJob, MultiFileGeneratingJob
 from pathlib import Path
 from typing import Dict, Optional, Union, List, Tuple, Literal
-from crispr_screens.services.mageck_io import (
+from crisprscreens.services.mageck_io import (
     write_filtered_mageck_comparison,
     combine_comparison_output,
 )
-from crispr_screens.r_integration.mageck_wrapper import run_mageck_scatterview
+from crisprscreens.r_integration.mageck_wrapper import run_mageck_scatterview
 
 
 def combine_comparison_output_job(

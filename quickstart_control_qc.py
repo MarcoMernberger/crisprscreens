@@ -7,7 +7,7 @@ Adjust paths and parameters as needed.
 """
 
 from pathlib import Path
-from crispr_screens.core.qc import generate_control_qc_report
+from crisprscreens.core.qc import generate_control_qc_report
 
 # ============================================================================
 # CONFIGURATION - ADJUST THESE PATHS FOR YOUR DATA

@@ -9,12 +9,12 @@ import matplotlib.pyplot as plt
 
 import pytest
 
-from crispr_screens.core.qc import (
+from crisprscreens.core.qc import (
     qc_replicate_consistency,
     qc_logfc_distribution,
     qc_controls_neutrality,
 )
-from crispr_screens.models import ReportConfig, ResultReport
+from crisprscreens.models import ReportConfig, ResultReport
 
 
 def test_qc_replicate_consistency_skips_baseline():

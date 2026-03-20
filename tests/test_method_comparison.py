@@ -111,7 +111,7 @@ def create_mock_control_sgrnas(tmp_dir, n_controls=20):
 
 def test_imports():
     """Test that all modules can be imported."""
-    from crispr_screens.core.method_comparison import (
+    from crisprscreens.core.method_comparison import (
         get_top_n_genes,
         compute_rank_correlation,
         compute_overlap,
@@ -119,7 +119,7 @@ def test_imports():
         analyze_control_false_positives,
     )
 
-    from crispr_screens.jobs.method_comparison_jobs import (
+    from crisprscreens.jobs.method_comparison_jobs import (
         sgrna_coherence_job,
         control_false_positive_job,
     )
@@ -129,7 +129,7 @@ def test_imports():
 
 def test_get_top_n_genes():
     """Test get_top_n_genes function."""
-    from crispr_screens.core.method_comparison import get_top_n_genes
+    from crisprscreens.core.method_comparison import get_top_n_genes
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         gene_summary = create_mock_gene_summary(tmp_dir, n_genes=100)
@@ -145,7 +145,7 @@ def test_get_top_n_genes():
 
 def test_compute_overlap():
     """Test Jaccard index computation."""
-    from crispr_screens.core.method_comparison import compute_overlap
+    from crisprscreens.core.method_comparison import compute_overlap
 
     set1 = {"A", "B", "C", "D"}
     set2 = {"B", "C", "D", "E"}
@@ -162,7 +162,7 @@ def test_compute_overlap():
 
 def test_compute_rank_correlation():
     """Test Spearman rank correlation."""
-    from crispr_screens.core.method_comparison import compute_rank_correlation
+    from crisprscreens.core.method_comparison import compute_rank_correlation
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         gs1 = create_mock_gene_summary(tmp_dir, n_genes=100)
@@ -179,7 +179,7 @@ def test_compute_rank_correlation():
 
 def test_analyze_sgrna_coherence():
     """Test sgRNA coherence analysis."""
-    from crispr_screens.core.method_comparison import analyze_sgrna_coherence
+    from crisprscreens.core.method_comparison import analyze_sgrna_coherence
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         gene_summary = create_mock_gene_summary(tmp_dir, n_genes=100)
@@ -209,7 +209,7 @@ def test_analyze_sgrna_coherence():
 
 def test_analyze_control_false_positives():
     """Test control false-positive analysis."""
-    from crispr_screens.core.method_comparison import (
+    from crisprscreens.core.method_comparison import (
         analyze_control_false_positives,
     )
 
@@ -251,7 +251,7 @@ def test_analyze_control_false_positives():
 
 def test_create_permuted_count_table():
     """Test permuted count table creation."""
-    from crispr_screens.core.method_comparison import (
+    from crisprscreens.core.method_comparison import (
         create_permuted_count_table,
     )
 

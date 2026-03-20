@@ -3,7 +3,7 @@ DEPRECATED: This module is deprecated and maintained only for backward
 compatibility.
 
 Please use the new report classes from models module:
-    from crispr_screens.models import ResultReport, ReportConfig
+    from crisprscreens.models import ResultReport, ReportConfig
 
 The classes in this module are now simple wrappers around the new
 implementation.
@@ -23,9 +23,9 @@ __all__ = ["ResultReport", "ReportConfig"]
 
 # Issue deprecation warning on import
 warnings.warn(
-    "The 'crispr_screens.core.report' module is deprecated. "
-    "Please use 'crispr_screens.models' instead: "
-    "from crispr_screens.models import ResultReport, ReportConfig",
+    "The 'crisprscreens.core.report' module is deprecated. "
+    "Please use 'crisprscreens.models' instead: "
+    "from crisprscreens.models import ResultReport, ReportConfig",
     DeprecationWarning,
     stacklevel=2,
 )
@@ -34,7 +34,7 @@ warnings.warn(
 # Backward compatibility wrappers
 class ReportConfig(_ReportConfig):
     """
-    DEPRECATED: Use crispr_screens.models.ReportConfig instead.
+    DEPRECATED: Use crisprscreens.models.ReportConfig instead.
 
     This is a compatibility wrapper that delegates to the new implementation.
     """
@@ -44,7 +44,7 @@ class ReportConfig(_ReportConfig):
 
 class ResultReport(_ResultReport):
     """
-    DEPRECATED: Use crispr_screens.models.ResultReport instead.
+    DEPRECATED: Use crisprscreens.models.ResultReport instead.
 
     This is a compatibility wrapper that delegates to the new implementation.
     """
@@ -52,7 +52,7 @@ class ResultReport(_ResultReport):
     def __init__(self, *args, **kwargs):
         warnings.warn(
             "ResultReport from core.report is deprecated. "
-            "Use: from crispr_screens.models import ResultReport",
+            "Use: from crisprscreens.models import ResultReport",
             DeprecationWarning,
             stacklevel=2,
         )

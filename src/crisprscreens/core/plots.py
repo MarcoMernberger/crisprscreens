@@ -1,12 +1,18 @@
 import itertools
-import numpy as np
+import warnings
+from typing import Dict, Iterable, List, Optional, Tuple, Union, Literal, Mapping, Callable
+
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
-from typing import Dict, Iterable, Tuple, Union, List, Optional
+import seaborn as sns
+from matplotlib.figure import Figure, Axes
 from pandas import DataFrame
 from sklearn.decomposition import PCA
-import seaborn as sns
-import warnings
+from pathlib import Path
+
+from pypipegraph2 import FileGeneratingJob, Job  # type: ignore
+
 
 try:
     from matplotlib_venn import venn2, venn3
@@ -1287,7 +1293,7 @@ def plot_control_pca(
     # Parse sample metadata
     sample_metadata = []
     for col in sample_cols:
-        from crispr_screens.core.qc import parse_condition_replicate
+        from crisprscreens.core.qc import parse_condition_replicate
 
         cond, rep = parse_condition_replicate(col)
         sample_metadata.append(
@@ -2795,3 +2801,479 @@ def plot_ranking_metric_heatmaps(
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
     return fig
+
+
+def _save(fig: Figure, outfile: Path | str):
+    base = Path(outfile).with_suffix("")
+    base.parent.mkdir(parents=True, exist_ok=True)
+    for ext in [".png", ".pdf", ".svg"]:
+        fig.savefig(base.with_suffix(ext), bbox_inches="tight")
+
+
+def get_dfs(
+    substitution_frequencies: Mapping[str, Path],
+) -> tuple[Mapping[str, pd.DataFrame], list[str]]:
+    dfs = {}
+    for name, path in substitution_frequencies.items():
+        if not path or not Path(path).exists():
+            # allow placeholders (e.g. empty Path) - skip them
+            continue
+        df = pd.read_csv(path, sep="\t", index_col=0)
+        dfs[name] = df
+
+    if not dfs:
+        raise ValueError("No valid substitution frequency files found.")
+
+    # all tables must have the same columns (same reference sequence positions)
+    reference_columns = list(next(iter(dfs.values())).columns)
+    for name, df in dfs.items():
+        if list(df.columns) != reference_columns:
+            raise ValueError(
+                f"Substitution frequency table for {name} has different columns than others: "  # noqa: E501
+                f"{list(df.columns)} != {reference_columns}"
+            )
+    return dfs, reference_columns
+
+
+def _prepare_df(
+    df: pd.DataFrame,
+    base_order: list[str],
+    input_type: Literal["counts", "percentages"],
+    display_type: Literal["counts", "percentages"],
+    omit_reference: bool = False,
+) -> tuple[pd.DataFrame, str]:
+    """Reindex rows, apply conversion, return (df_ready, y_label)."""
+    df = df.reindex(base_order).fillna(0.0)
+    label = "Count"
+    if input_type == "percentages":
+        # percentages are always displayed as percentages
+        df = df*100
+        label = "Frequency (%)"
+    else:
+        # input is counts
+        if display_type == "percentages":
+            col_sums = df.sum(axis=0).replace(0, 1)
+            df = df.divide(col_sums, axis=1) * 100.0
+            label = "Frequency (%)"
+        
+        # else display raw counts as is
+    if omit_reference:
+        for col in df.columns:
+            ref_base = col.split(".")[0]
+            df.loc[ref_base, col] = 0.0
+    return df, label
+
+
+def _strip_ref_label(col: str) -> str:
+    """Return just the nucleotide character from a column name like 'C' or 'C.1'."""
+    return col.split(".")[0]
+
+
+def __plot_separate(
+    outfile: Path | str,
+    dfs_plot,
+    ref_seq,
+    positions,
+    base_order,
+    colors,
+    y_label: str,
+    display_type: Literal["counts", "percentages"],
+    title: str | None,
+    ylim: float | None = None,
+):
+    # One subfigure per sample, shared X-axis.
+    names = sorted(dfs_plot.keys(), key=lambda k: (k == "base", k))
+    n_pos = len(positions)
+    fig, axes = plt.subplots(
+        len(names),
+        1,
+        figsize=(max(8, n_pos * 0.35), 2.5 * len(names)),
+        sharex=True,
+        dpi=150,
+    )
+    if len(names) == 1:
+        axes = [axes]
+
+    x_labels = [_strip_ref_label(c) for c in ref_seq]
+
+    for ax, name in zip(axes, names):
+        df = dfs_plot[name]
+        bottom = np.zeros(n_pos, dtype=float)
+        for base in base_order:
+            values = df.loc[base].to_numpy(dtype=float)
+            ax.bar(
+                positions,
+                values,
+                bottom=bottom,
+                label=base,
+                color=colors.get(base, "gray"),
+            )
+            bottom += values
+        # if display_type == "percentages" and ylim is None:
+        #    ax.set_ylim(0, 100)
+        if ylim is not None:
+            ax.set_ylim(0, ylim)
+        ax.set_ylabel(f"{name}\n{y_label}")
+        ax.set_xticks(positions)
+        ax.set_xticklabels(x_labels, rotation=0, fontsize=8)
+
+    axes[-1].set_xlabel("Reference position")
+    axes[0].legend(
+        ncol=len(base_order), bbox_to_anchor=(1.0, 1.0), loc="upper left"
+    )
+    if title:
+        fig.suptitle(title, y=1.01)
+    fig.tight_layout()
+    _save(fig, outfile)
+    plt.close(fig)
+    return
+
+
+def __plot_grouped(
+    outfile: Path | str,
+    dfs_plot,
+    ref_seq,
+    positions,
+    base_order,
+    colors,
+    y_label: str,
+    display_type: Literal["counts", "percentages"],
+    title: str | None,
+):
+    # Samples are grouped side-by-side per position.
+    n = len(dfs_plot)
+    n_pos = len(positions)
+    width = min(0.8, 0.8 / max(1, n))
+    offsets = np.linspace(-0.4 + width / 2, 0.4 - width / 2, n)
+
+    x_labels = [_strip_ref_label(c) for c in ref_seq]
+
+    fig, ax = plt.subplots(
+        figsize=(max(8, n_pos * 0.5 * max(1, n * 0.4)), 6),
+        dpi=150,
+    )
+
+    legend_added: set[str] = set()
+    for offset, (name, df) in zip(offsets, dfs_plot.items()):
+        bottom = np.zeros(n_pos, dtype=float)
+        for base in base_order:
+            values = df.loc[base].to_numpy(dtype=float)
+            label = base if base not in legend_added else "_nolegend_"
+            ax.bar(
+                positions + offset,
+                values,
+                width=width,
+                bottom=bottom,
+                label=label,
+                color=colors.get(base, "gray"),
+            )
+            legend_added.add(base)
+            bottom += values
+
+        # Annotate each group with the sample name below the bars
+        y_annot = -3 if display_type == "percentages" else ax.get_ylim()[0] * 1.02
+        for pos in positions:
+            ax.text(
+                pos + offset,
+                y_annot,
+                name,
+                ha="center",
+                va="top",
+                fontsize=6,
+                rotation=90,
+            )
+
+    if display_type == "percentages":
+        ax.set_ylim(0, 100)
+    ax.set_xticks(positions)
+    ax.set_xticklabels(x_labels, rotation=0, fontsize=8)
+    ax.set_xlabel("Reference position")
+    ax.set_ylabel(y_label)
+    ax.legend(ncol=len(base_order), bbox_to_anchor=(1.0, 1.0), loc="upper left")
+    if title:
+        ax.set_title(title)
+    fig.tight_layout()
+    _save(fig, outfile)
+    plt.close(fig)
+    return
+
+
+def plot_substitution_frequency(
+    substitution_frequencies: Mapping[str, Path],
+    outfile: Path,
+    dependencies: list[Job] = [],
+    plottype: Literal["grouped", "separate"] = "separate",
+    input_type: Literal["counts", "percentages"] = "counts",
+    display_type: Literal["counts", "percentages"] = "percentages",
+    omit_reference: bool = False,
+    window: tuple[int, int] | None = None,
+    title: str | None = None,
+    colors: dict = {"A": "green", "C": "blue", "G": "orange", "T": "red", "N": "gray"},
+    ylim: float | None = None,
+) -> Job:
+    """
+    plot_substitution_frequency collects the substitution frequencies per nucleotide
+    position from the different samples and plots them as stacked bar charts (ACGTN).
+    The X-axis labels show the reference nucleotide at each position.
+
+    The plot is saved as a pdf, png and svg file.
+
+    The function returns a Job that can be added to the pipeline. The Job depends on
+    the jobs that generate the substitution frequency tables.
+
+
+    Parameters
+    ----------
+    substitution_frequencies : Mapping[str, Path]
+        A mapping of sample names to their corresponding substitution frequency table
+        file paths.
+    outfile : Path
+        The path to the output file where the plot will be saved.
+    dependencies : list[Job], optional
+        A list of jobs that this job depends on, by default []
+    plottype : Literal["grouped", "separate"], optional
+        The type of bar chart to plot, by default "separate". Options are:
+        - "grouped": Grouped bar chart – samples sit side-by-side at each position,
+          each bar stacked ACGTN.
+        - "separate": One subfigure per sample with a shared X-axis; each bar is a
+          stacked ACGTN bar.
+    input_type : Literal["counts", "percentages"], optional
+        Whether the values in the input files are raw read counts or already
+        percentages/frequencies, by default "counts".
+    display_type : Literal["counts", "percentages"], optional
+        Whether to display raw counts or convert to percentages, by default
+        "percentages".  Ignored when input_type is "percentages" (always shown as %).
+    window : tuple[int, int] | None, optional
+        A (start, end) slice (0-based, end exclusive) into the full reference sequence
+        to restrict plotting to a sub-region, by default None (plot all positions).
+    title : str | None, optional
+        An optional title to add to the figure, by default None.
+    colors : dict, optional
+        A mapping of nucleotide bases to colors for the plot, by default
+        {"A": "green", "C": "blue", "G": "orange", "T": "red", "N": "gray"}.
+
+    Returns
+    -------
+    Job
+        A Job that can be added to the pipeline.
+
+    """
+
+    def __plot(outfile):
+        # reference sequence is encoded in the column labels (one base per position)
+        dfs, reference_columns = get_dfs(substitution_frequencies)
+        base_order = ["A", "C", "G", "T", "N"]
+
+        # apply window slice if requested
+        if window is not None:
+            start, end = window
+            reference_columns = reference_columns[start:end]
+            dfs = {name: df[reference_columns] for name, df in dfs.items()}
+
+        ref_seq = reference_columns
+        positions = np.arange(len(ref_seq))
+
+        # prepare (convert / normalise) each dataframe
+        dfs_plot = {}
+        y_label = "Frequency (%)"
+        for name, df in dfs.items():
+            df_ready, y_label = _prepare_df(df, base_order, input_type, display_type, omit_reference)
+            dfs_plot[name] = df_ready
+        df_out = pd.concat(dfs_plot.values())
+        df_out.to_csv(outfile.with_suffix(".prepared_data.csv"))
+        if plottype == "separate":
+            return __plot_separate(
+                outfile, dfs_plot, ref_seq, positions, base_order, colors,
+                y_label, display_type, title, ylim
+            )
+        elif plottype == "grouped":
+            return __plot_grouped(
+                outfile, dfs_plot, ref_seq, positions, base_order, colors,
+                y_label, display_type, title, ylim
+            )
+        else:
+            raise NotImplementedError(
+                "Parameter plottype must be one of ['grouped', 'separate']"
+            )
+
+    return FileGeneratingJob(outfile, __plot).depends_on(dependencies)
+
+
+def plot_effect_size_with_labels(
+    df: DataFrame,
+    effect_col: str,
+    label_col: str | None = None,  # is None we assume the index contains the labels
+    center_x: float =0.0,
+    center_y: float =0.0,
+    zoom_on_ranks: tuple[int, int] | None = (0, 10), # a rank range to which to zoom in on (0-based, end exclusive)
+    select : list[str] | None | Callable = None, # if specified, only plot these genes
+    ylabel: str = "Gene",
+) -> tuple[Figure, Axes]:
+    """
+    Plot sorted effect sizes as a bar chart with gene labels. For log2FC, you
+    a flipped sigmoidal curve, for beta scores something else ...
+
+    If zoom_on_ranks is specified, this will be a 2 part subfigure with a zoom
+    on a certain rank range. Ranks are determined by sorting the effect sizes 
+    in descending order (rank 0 is the largest absolute effect).
+
+    Parameters
+    ----------
+    df : DataFrame
+        DataFrame containing effect sizes and labels.
+    effect_col : str
+        Column name for effect sizes.
+    label_col : str, optional
+        Column name for gene labels. If None, index is used as labels.
+    center_x : float, optional
+        Value to center the plot on the x-axis (e.g. 0), by default 0.0.
+    center_y : float, optional
+        Value to center the plot on the y-axis (e.g. 0), by default 0.0.
+    zoom_on_ranks : tuple[int, int] | None, optional
+        A rank range (0-based, end exclusive) to zoom in on. Ranks are 
+        determined by sorting effect sizes. By default (0, 10) to show top 10 
+        hits.
+    select : list[str] | None | Callable, optional
+        If specified, only plot these genes. Can be a list of gene names or a callable
+        that takes the DataFrame and returns a boolean mask.
+
+    Returns
+    -------
+    Figure
+        The matplotlib figure object.
+    Axes
+        The matplotlib axes object.
+    """
+    # Defensive copy and ensure numeric
+    df = df.copy()
+    if effect_col not in df.columns:
+        raise KeyError(f"Effect column '{effect_col}' not found in DataFrame")
+
+    df[effect_col] = pd.to_numeric(df[effect_col], errors="coerce")
+
+    # Prepare labels
+    if label_col is not None:
+        if label_col not in df.columns:
+            raise KeyError(f"Label column '{label_col}' not found in DataFrame")
+        df["label"] = df[label_col].astype(str)
+    else:
+        df["label"] = df.index.astype(str)
+
+    # Compute absolute-effect ranks (rank 0 == largest abs effect)
+    df = df.dropna(subset=[effect_col])
+    df = df.assign(_abs_effect=df[effect_col].abs())
+    df = df.sort_values("_abs_effect", ascending=False).reset_index(drop=True)
+    df["rank"] = df.index.astype(int)
+
+    # Apply selection if provided (list of labels or callable mask)
+    if select is not None:
+        if callable(select):
+            try:
+                mask = select(df)
+            except Exception as e:
+                raise ValueError(f"select callable raised an error: {e}")
+            df = df.loc[mask].reset_index(drop=True)
+            # recompute ranks after selection
+            df["rank"] = df.index.astype(int)
+        else:
+            # assume iterable of labels
+            sel_set = set(select)
+            df = df[df["label"].isin(sel_set)].reset_index(drop=True)
+            df["rank"] = df.index.astype(int)
+
+    # If empty after filtering, return an empty figure with message
+    if df.shape[0] == 0:
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.text(
+            0.5,
+            0.5,
+            "No data to plot",
+            ha="center",
+            va="center",
+            fontsize=12,
+        )
+        ax.axis("off")
+        return fig, ax
+
+    # Helper to color bars by sign
+    def _color_by_sign(vals):
+        return ["red" if v >= 0 else "blue" for v in vals]
+
+    # If zoom requested, create two-panel figure: overview (ranks) + zoomed bar plot
+    if zoom_on_ranks is not None:
+        start_rank, end_rank = zoom_on_ranks
+        # Clamp ranks
+        start_rank = max(0, int(start_rank))
+        end_rank = max(start_rank + 1, int(end_rank))
+
+        # Reconstruct full ranked dataframe (before any selection) for context lines if possible
+        # Note: if selection was applied earlier, df contains only selected items; we will treat df as the universe
+
+        # Overview: scatter of effect vs rank
+        n = max(6, min(20, len(df)))
+        fig, (ax_overview, ax_zoom) = plt.subplots(
+            2,
+            1,
+            figsize=(10, max(6, len(df) * 0.18 + 1)),
+            gridspec_kw={"height_ratios": [1, 2]},
+        )
+
+        # Overview scatter: show all ranks
+        ax_overview.scatter(df[effect_col], df["rank"], s=20, c="lightgray", alpha=0.7)
+
+        # Highlight zoomed range on overview
+        mask_zoom = (df["rank"] >= start_rank) & (df["rank"] < end_rank)
+        if mask_zoom.any():
+            ax_overview.scatter(
+                df.loc[mask_zoom, effect_col],
+                df.loc[mask_zoom, "rank"],
+                s=30,
+                c="darkred",
+                alpha=0.9,
+                edgecolors="black",
+            )
+
+        ax_overview.invert_yaxis()
+        ax_overview.set_ylabel("Rank (0 = largest abs effect)")
+        ax_overview.set_title("Overview: effect size vs rank")
+        ax_overview.grid(axis="x", alpha=0.2)
+        ax_overview.axvline(center_x, color="gray", linestyle="--", alpha=0.7)
+
+        # Zoomed-in barh for selected rank window
+        df_zoom = df[(df["rank"] >= start_rank) & (df["rank"] < end_rank)].copy()
+        if df_zoom.shape[0] == 0:
+            ax_zoom.text(0.5, 0.5, "No items in zoom range", ha="center", va="center")
+            ax_zoom.axis("off")
+        else:
+            # Order so that largest effect on top
+            df_zoom = df_zoom.sort_values(by=effect_col)
+            colors = _color_by_sign(df_zoom[effect_col].values)
+            y_positions = np.arange(len(df_zoom))
+            ax_zoom.barh(y_positions, df_zoom[effect_col].values, color=colors, edgecolor="black")
+            ax_zoom.set_yticks(y_positions)
+            ax_zoom.set_yticklabels(df_zoom["label"].values, fontsize=9)
+            ax_zoom.invert_yaxis()
+            ax_zoom.set_xlabel(effect_col)
+            ax_zoom.set_title(f"Zoom: ranks {start_rank}..{end_rank - 1}")
+            ax_zoom.axvline(center_x, color="gray", linestyle="--", alpha=0.7)
+
+        fig.tight_layout()
+        return fig, (ax_overview, ax_zoom)
+
+    # No zoom: simple horizontal bar plot (labels on y-axis)
+    # Order bars so largest effect at top
+    df_plot = df.sort_values(by=effect_col)
+    colors = _color_by_sign(df_plot[effect_col].values)
+    fig, ax = plt.subplots(figsize=(8, max(4, len(df_plot) * 0.25)))
+    y_pos = np.arange(len(df_plot))
+    ax.barh(y_pos, df_plot[effect_col].values, color=colors, edgecolor="black")
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(df_plot["label"].values, fontsize=9)
+    ax.invert_yaxis()
+    ax.axvline(center_x, color="gray", linestyle="--", alpha=0.7)
+    ax.set_xlabel(effect_col)
+    ax.set_ylabel(ylabel)
+    ax.set_title(f"Effect Sizes with {ylabel} Labels")
+    ax.grid(axis="x", alpha=0.2)
+
+    return fig, ax

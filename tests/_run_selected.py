@@ -6,13 +6,13 @@ import importlib.util
 import sys
 
 # Preload core modules directly from source to avoid package-level imports
-src_prefix = Path(__file__).resolve().parents[1] / 'src' / 'crispr_screens' / 'core'
+src_prefix = Path(__file__).resolve().parents[1] / 'src' / 'crisprscreens' / 'core'
 modules_to_load = ['qc', 'report', 'plots']
 for m in modules_to_load:
     path = str((src_prefix / f"{m}.py").resolve())
-    spec = importlib.util.spec_from_file_location(f"crispr_screens.core.{m}", path)
+    spec = importlib.util.spec_from_file_location(f"crisprscreens.core.{m}", path)
     mod = importlib.util.module_from_spec(spec)
-    sys.modules[f"crispr_screens.core.{m}"] = mod
+    sys.modules[f"crisprscreens.core.{m}"] = mod
     spec.loader.exec_module(mod)
 
 # Now run the tests file which imports using package paths
