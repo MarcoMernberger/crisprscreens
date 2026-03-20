@@ -43,7 +43,7 @@ dev = [
 
 # hatchling: src-layout packaging
 [tool.hatch.build.targets.wheel]
-packages = ["src/crispr_screens"]
+packages = ["src/crisprscreens"]
 
 # --- Black ---
 [tool.black]
