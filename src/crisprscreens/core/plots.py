@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import matplotlib.patches as mpatches
 from matplotlib.figure import Figure, Axes
 from pandas import DataFrame
 from sklearn.decomposition import PCA
@@ -2907,6 +2908,7 @@ def __plot_separate(
                 bottom=bottom,
                 label=base,
                 color=colors.get(base, "gray"),
+                edgecolor='black', 
             )
             bottom += values
         # if display_type == "percentages" and ylim is None:
@@ -2919,15 +2921,21 @@ def __plot_separate(
 
     axes[-1].set_xlabel("Reference position")
     axes[0].legend(
-        ncol=len(base_order), bbox_to_anchor=(1.0, 1.0), loc="upper left"
+        ncol=len(base_order),
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.3),
+        frameon=False,
+        fontsize=9,
+        title="Base",
     )
     if title:
-        fig.suptitle(title, y=1.01)
+        fig.suptitle(title, y=1.04)
     fig.tight_layout()
     _save(fig, outfile)
     plt.close(fig)
     return
 
+HATCHES = ['', '///', '...', 'xxx', '+++', '\\\\\\']
 
 def __plot_grouped(
     outfile: Path | str,
@@ -2939,26 +2947,28 @@ def __plot_grouped(
     y_label: str,
     display_type: Literal["counts", "percentages"],
     title: str | None,
+    ylim: float | None = None,
 ):
-    # Samples are grouped side-by-side per position.
     n = len(dfs_plot)
     n_pos = len(positions)
     width = min(0.8, 0.8 / max(1, n))
     offsets = np.linspace(-0.4 + width / 2, 0.4 - width / 2, n)
-
     x_labels = [_strip_ref_label(c) for c in ref_seq]
+    min_bar_width_inch = 0.3
+    fig_width = np.clip(n_pos * n * min_bar_width_inch, 12, 200)
+    
+    fig, ax = plt.subplots(figsize=(fig_width, 6), dpi=150)
 
-    fig, ax = plt.subplots(
-        figsize=(max(8, n_pos * 0.5 * max(1, n * 0.4)), 6),
-        dpi=150,
-    )
+    legend_base_added: set[str] = set()
+    sample_handles = []  # für zweite Legende
 
-    legend_added: set[str] = set()
-    for offset, (name, df) in zip(offsets, dfs_plot.items()):
+    for i, (offset, (name, df)) in enumerate(zip(offsets, dfs_plot.items())):
+        hatch = HATCHES[i % len(HATCHES)]
         bottom = np.zeros(n_pos, dtype=float)
+
         for base in base_order:
             values = df.loc[base].to_numpy(dtype=float)
-            label = base if base not in legend_added else "_nolegend_"
+            label = base if base not in legend_base_added else "_nolegend_"
             ax.bar(
                 positions + offset,
                 values,
@@ -2966,37 +2976,54 @@ def __plot_grouped(
                 bottom=bottom,
                 label=label,
                 color=colors.get(base, "gray"),
+                edgecolor='black',
+                linewidth=0.5,
+                hatch=hatch,
             )
-            legend_added.add(base)
+            legend_base_added.add(base)
             bottom += values
 
-        # Annotate each group with the sample name below the bars
-        y_annot = -3 if display_type == "percentages" else ax.get_ylim()[0] * 1.02
-        for pos in positions:
-            ax.text(
-                pos + offset,
-                y_annot,
-                name,
-                ha="center",
-                va="top",
-                fontsize=6,
-                rotation=90,
-            )
+        # Proxy-Artist für Sample-Legende
+        sample_handles.append(
+            mpatches.Patch(facecolor='white', edgecolor='black',
+                           hatch=hatch, label=name)
+        )
 
-    if display_type == "percentages":
-        ax.set_ylim(0, 100)
+    # Legende 1: Nukleotide (Farben) – oben zentriert
+    legend1 = ax.legend(
+        ncol=1,
+        loc="upper right",
+        bbox_to_anchor=(1.0, 1.0),
+        frameon=True,
+        fontsize=9,
+        title="Base",
+    )
+    ax.add_artist(legend1)  # wichtig! sonst wird sie von legend2 überschrieben
+
+    # Legende 2: Samples (Hatch) – daneben
+    ax.legend(
+        handles=sample_handles,
+        ncol=1,
+        loc="upper right",
+        bbox_to_anchor=(1.0, 0.55),
+        frameon=True,
+        fontsize=9,
+        title="Sample",
+    )
+
+    if ylim is not None:
+        ax.set_ylim(0, ylim)
     ax.set_xticks(positions)
     ax.set_xticklabels(x_labels, rotation=0, fontsize=8)
     ax.set_xlabel("Reference position")
     ax.set_ylabel(y_label)
-    ax.legend(ncol=len(base_order), bbox_to_anchor=(1.0, 1.0), loc="upper left")
     if title:
-        ax.set_title(title)
-    fig.tight_layout()
+        ax.set_title(title, pad=50)
+
+    fig.tight_layout(rect=[0, 0, 1, 0.92])  # space for legends above
+    fig.subplots_adjust(top=0.82) # adjust for both legends
     _save(fig, outfile)
     plt.close(fig)
-    return
-
 
 def plot_substitution_frequency(
     substitution_frequencies: Mapping[str, Path],
@@ -3008,7 +3035,8 @@ def plot_substitution_frequency(
     omit_reference: bool = False,
     window: tuple[int, int] | None = None,
     title: str | None = None,
-    colors: dict = {"A": "green", "C": "blue", "G": "orange", "T": "red", "N": "gray"},
+    #colors: dict = {"A": "#2ca02c", "C": "#1f77b4", "G": "#ff7f0e", "T": "#d62728", "N": "#7f7f7f"},
+    colors: dict = {"A": "#1b9e77","C": "#377eb8", "G": "#d95f02", "T": "#e7298a", "N": "#999999"},
     ylim: float | None = None,
 ) -> Job:
     """
@@ -3061,6 +3089,7 @@ def plot_substitution_frequency(
 
     def __plot(outfile):
         # reference sequence is encoded in the column labels (one base per position)
+        outfile.parent.mkdir(parents=True, exist_ok=True)
         dfs, reference_columns = get_dfs(substitution_frequencies)
         base_order = ["A", "C", "G", "T", "N"]
 
