@@ -17,8 +17,16 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.1.0"
 
 
+from .core.interactive import (
+    plot_effect_size,
+    select_top_n,
+)
 from .core.mageck import mageck_mle, mageck_test
-from .core.plots import plot_substitution_frequency
+from .core.plots import (
+    _save,
+    plot_effect_size_with_labels_zoom,
+    plot_substitution_frequency,
+)
 from .jobs.mageck_jobs import (
     combine_comparison_output_job,
     create_combine_gene_info_with_mageck_output_job,
@@ -95,4 +103,8 @@ __all__ = [
     "write_significant_genes_job",
     "calculate_ranking_metrics_job",
     "plot_ranking_metric_heatmaps_job",
+    "plot_effect_size",
+    "select_top_n",
+    "plot_effect_size_with_labels_zoom",
+    "_save",
 ]

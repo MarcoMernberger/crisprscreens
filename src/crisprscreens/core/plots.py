@@ -1,19 +1,27 @@
 import itertools
 import warnings
-from typing import Dict, Iterable, List, Optional, Tuple, Union, Literal, Mapping, Callable
+from pathlib import Path
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.patches as mpatches
-from matplotlib.figure import Figure, Axes
+from matplotlib.figure import Axes, Figure  # type: ignore[import]
 from pandas import DataFrame
+from pypipegraph2 import FileGeneratingJob, Job  # type: ignore[import]
 from sklearn.decomposition import PCA
-from pathlib import Path
-
-from pypipegraph2 import FileGeneratingJob, Job  # type: ignore
-
 
 try:
     from matplotlib_venn import venn2, venn3
@@ -2848,7 +2856,7 @@ def _prepare_df(
     label = "Count"
     if input_type == "percentages":
         # percentages are always displayed as percentages
-        df = df*100
+        df = df * 100
         label = "Frequency (%)"
     else:
         # input is counts
@@ -2856,7 +2864,7 @@ def _prepare_df(
             col_sums = df.sum(axis=0).replace(0, 1)
             df = df.divide(col_sums, axis=1) * 100.0
             label = "Frequency (%)"
-        
+
         # else display raw counts as is
     if omit_reference:
         for col in df.columns:
@@ -2908,7 +2916,7 @@ def __plot_separate(
                 bottom=bottom,
                 label=base,
                 color=colors.get(base, "gray"),
-                edgecolor='black', 
+                edgecolor="black",
             )
             bottom += values
         # if display_type == "percentages" and ylim is None:
@@ -2935,7 +2943,9 @@ def __plot_separate(
     plt.close(fig)
     return
 
-HATCHES = ['', '///', '...', 'xxx', '+++', '\\\\\\']
+
+HATCHES = ["", "///", "...", "xxx", "+++", "\\\\\\"]
+
 
 def __plot_grouped(
     outfile: Path | str,
@@ -2956,7 +2966,7 @@ def __plot_grouped(
     x_labels = [_strip_ref_label(c) for c in ref_seq]
     min_bar_width_inch = 0.3
     fig_width = np.clip(n_pos * n * min_bar_width_inch, 12, 200)
-    
+
     fig, ax = plt.subplots(figsize=(fig_width, 6), dpi=150)
 
     legend_base_added: set[str] = set()
@@ -2976,7 +2986,7 @@ def __plot_grouped(
                 bottom=bottom,
                 label=label,
                 color=colors.get(base, "gray"),
-                edgecolor='black',
+                edgecolor="black",
                 linewidth=0.5,
                 hatch=hatch,
             )
@@ -2985,8 +2995,9 @@ def __plot_grouped(
 
         # Proxy-Artist für Sample-Legende
         sample_handles.append(
-            mpatches.Patch(facecolor='white', edgecolor='black',
-                           hatch=hatch, label=name)
+            mpatches.Patch(
+                facecolor="white", edgecolor="black", hatch=hatch, label=name
+            )
         )
 
     # Legende 1: Nukleotide (Farben) – oben zentriert
@@ -3021,9 +3032,10 @@ def __plot_grouped(
         ax.set_title(title, pad=50)
 
     fig.tight_layout(rect=[0, 0, 1, 0.92])  # space for legends above
-    fig.subplots_adjust(top=0.82) # adjust for both legends
+    fig.subplots_adjust(top=0.82)  # adjust for both legends
     _save(fig, outfile)
     plt.close(fig)
+
 
 def plot_substitution_frequency(
     substitution_frequencies: Mapping[str, Path],
@@ -3035,8 +3047,14 @@ def plot_substitution_frequency(
     omit_reference: bool = False,
     window: tuple[int, int] | None = None,
     title: str | None = None,
-    #colors: dict = {"A": "#2ca02c", "C": "#1f77b4", "G": "#ff7f0e", "T": "#d62728", "N": "#7f7f7f"},
-    colors: dict = {"A": "#1b9e77","C": "#377eb8", "G": "#d95f02", "T": "#e7298a", "N": "#999999"},
+    # colors: dict = {"A": "#2ca02c", "C": "#1f77b4", "G": "#ff7f0e", "T": "#d62728", "N": "#7f7f7f"},
+    colors: dict = {
+        "A": "#1b9e77",
+        "C": "#377eb8",
+        "G": "#d95f02",
+        "T": "#e7298a",
+        "N": "#999999",
+    },
     ylim: float | None = None,
 ) -> Job:
     """
@@ -3106,19 +3124,37 @@ def plot_substitution_frequency(
         dfs_plot = {}
         y_label = "Frequency (%)"
         for name, df in dfs.items():
-            df_ready, y_label = _prepare_df(df, base_order, input_type, display_type, omit_reference)
+            df_ready, y_label = _prepare_df(
+                df, base_order, input_type, display_type, omit_reference
+            )
             dfs_plot[name] = df_ready
         df_out = pd.concat(dfs_plot.values())
         df_out.to_csv(outfile.with_suffix(".prepared_data.csv"))
         if plottype == "separate":
             return __plot_separate(
-                outfile, dfs_plot, ref_seq, positions, base_order, colors,
-                y_label, display_type, title, ylim
+                outfile,
+                dfs_plot,
+                ref_seq,
+                positions,
+                base_order,
+                colors,
+                y_label,
+                display_type,
+                title,
+                ylim,
             )
         elif plottype == "grouped":
             return __plot_grouped(
-                outfile, dfs_plot, ref_seq, positions, base_order, colors,
-                y_label, display_type, title, ylim
+                outfile,
+                dfs_plot,
+                ref_seq,
+                positions,
+                base_order,
+                colors,
+                y_label,
+                display_type,
+                title,
+                ylim,
             )
         else:
             raise NotImplementedError(
@@ -3128,59 +3164,59 @@ def plot_substitution_frequency(
     return FileGeneratingJob(outfile, __plot).depends_on(dependencies)
 
 
-def plot_effect_size_with_labels(
+def _scale(
+    values: np.ndarray,
+    scale: Literal["log"] | Callable | None,
+    offset: float = 0,
+) -> np.ndarray:
+    if not scale:
+        return values
+    arr = np.array(values, dtype=np.float64)
+    if isinstance(scale, str) and scale == "log":
+        return -np.log10(
+            offset + np.where(arr > 0, arr, np.nan)
+        )  # -log10, NaN für <=0
+    elif callable(scale):
+        return scale(arr)
+    else:
+        raise ValueError(f"Invalid scale: {scale}")
+
+
+def plot_effect_size_with_labels_zoom(
     df: DataFrame,
     effect_col: str,
-    label_col: str | None = None,  # is None we assume the index contains the labels
-    center_x: float =0.0,
-    center_y: float =0.0,
-    zoom_on_ranks: tuple[int, int] | None = (0, 10), # a rank range to which to zoom in on (0-based, end exclusive)
-    select : list[str] | None | Callable = None, # if specified, only plot these genes
+    p_value_col: str,
+    label_col: str | None = None,
+    center_y: float = 0.0,
+    zoom_on_ranks: tuple[int, int] | None = (0, 10),
+    zoom_side: Literal["top", "bottom"] = "top",
+    select: list[str] | None | Callable = None,
+    scale_y: Literal["log"] | Callable | None = None,
     ylabel: str = "Gene",
+    ascending: bool = True,
 ) -> tuple[Figure, Axes]:
     """
-    Plot sorted effect sizes as a bar chart with gene labels. For log2FC, you
-    a flipped sigmoidal curve, for beta scores something else ...
-
-    If zoom_on_ranks is specified, this will be a 2 part subfigure with a zoom
-    on a certain rank range. Ranks are determined by sorting the effect sizes 
-    in descending order (rank 0 is the largest absolute effect).
+    Waterfall plot: rank (x) vs effect size (y) with optional inset zoom
+    on top or bottom ranked selected genes.
 
     Parameters
     ----------
-    df : DataFrame
-        DataFrame containing effect sizes and labels.
-    effect_col : str
-        Column name for effect sizes.
-    label_col : str, optional
-        Column name for gene labels. If None, index is used as labels.
-    center_x : float, optional
-        Value to center the plot on the x-axis (e.g. 0), by default 0.0.
-    center_y : float, optional
-        Value to center the plot on the y-axis (e.g. 0), by default 0.0.
-    zoom_on_ranks : tuple[int, int] | None, optional
-        A rank range (0-based, end exclusive) to zoom in on. Ranks are 
-        determined by sorting effect sizes. By default (0, 10) to show top 10 
-        hits.
-    select : list[str] | None | Callable, optional
-        If specified, only plot these genes. Can be a list of gene names or a callable
-        that takes the DataFrame and returns a boolean mask.
-
-    Returns
-    -------
-    Figure
-        The matplotlib figure object.
-    Axes
-        The matplotlib axes object.
+    ascending : bool
+        If True, most negative effect is rank 0 (left). If False, most
+        positive effect is rank 0 (left).
+    zoom_on_ranks : tuple[int, int] | None
+        Rank range (0-based, end exclusive) among selected genes to zoom in on.
+    zoom_side : "top" | "bottom"
+        "top" zooms on largest absolute effect, "bottom" on smallest.
     """
-    # Defensive copy and ensure numeric
+
+    # --- Daten vorbereiten ---
     df = df.copy()
     if effect_col not in df.columns:
         raise KeyError(f"Effect column '{effect_col}' not found in DataFrame")
 
     df[effect_col] = pd.to_numeric(df[effect_col], errors="coerce")
 
-    # Prepare labels
     if label_col is not None:
         if label_col not in df.columns:
             raise KeyError(f"Label column '{label_col}' not found in DataFrame")
@@ -3188,121 +3224,178 @@ def plot_effect_size_with_labels(
     else:
         df["label"] = df.index.astype(str)
 
-    # Compute absolute-effect ranks (rank 0 == largest abs effect)
     df = df.dropna(subset=[effect_col])
-    df = df.assign(_abs_effect=df[effect_col].abs())
-    df = df.sort_values("_abs_effect", ascending=False).reset_index(drop=True)
+
+    # Wasserfall: sortiert nach tatsächlichem Effektwert
+    df = df.sort_values(effect_col, ascending=ascending).reset_index(drop=True)
     df["rank"] = df.index.astype(int)
+    df = df.assign(_abs_effect=df[effect_col].abs())
 
-    # Apply selection if provided (list of labels or callable mask)
-    if select is not None:
-        if callable(select):
-            try:
-                mask = select(df)
-            except Exception as e:
-                raise ValueError(f"select callable raised an error: {e}")
-            df = df.loc[mask].reset_index(drop=True)
-            # recompute ranks after selection
-            df["rank"] = df.index.astype(int)
-        else:
-            # assume iterable of labels
-            sel_set = set(select)
-            df = df[df["label"].isin(sel_set)].reset_index(drop=True)
-            df["rank"] = df.index.astype(int)
-
-    # If empty after filtering, return an empty figure with message
     if df.shape[0] == 0:
         fig, ax = plt.subplots(figsize=(6, 3))
         ax.text(
-            0.5,
-            0.5,
-            "No data to plot",
-            ha="center",
-            va="center",
-            fontsize=12,
+            0.5, 0.5, "No data to plot", ha="center", va="center", fontsize=12
         )
         ax.axis("off")
         return fig, ax
 
-    # Helper to color bars by sign
+    # --- Selected Gene bestimmen ---
+    if select is not None:
+        if callable(select):
+            try:
+                sel_mask = select(df)
+            except Exception as e:
+                raise ValueError(f"select callable raised an error: {e}")
+            sel_labels = set(df.loc[sel_mask, "label"])
+        else:
+            sel_labels = set(select)
+    else:
+        sel_labels = set()
+
+    # --- Skalierung (nur y = effect sinnvoll) ---
+    df["_y"] = _scale(df[effect_col].to_numpy(dtype=np.float64), scale_y)
+    df["_x"] = df["rank"].astype(float)
+
+    y_label = (
+        f"-log10({effect_col})"
+        if isinstance(scale_y, str) and scale_y == "log"
+        else effect_col
+    )
+
     def _color_by_sign(vals):
         return ["red" if v >= 0 else "blue" for v in vals]
 
-    # If zoom requested, create two-panel figure: overview (ranks) + zoomed bar plot
-    if zoom_on_ranks is not None:
+    # --- Zoom-Bereich bestimmen (nach absolutem Effekt) ---
+    df_zoom = None
+    if zoom_on_ranks is not None and sel_labels:
         start_rank, end_rank = zoom_on_ranks
-        # Clamp ranks
         start_rank = max(0, int(start_rank))
         end_rank = max(start_rank + 1, int(end_rank))
 
-        # Reconstruct full ranked dataframe (before any selection) for context lines if possible
-        # Note: if selection was applied earlier, df contains only selected items; we will treat df as the universe
+        df_sel = df[df["label"].isin(sel_labels)].copy()
+        df_sel = df_sel.sort_values(
+            "_abs_effect", ascending=(zoom_side == "bottom")
+        ).reset_index(drop=True)
+        df_sel["zoom_rank"] = df_sel.index.astype(int)
+        df_zoom = df_sel[
+            (df_sel["zoom_rank"] >= start_rank)
+            & (df_sel["zoom_rank"] < end_rank)
+        ].copy()
 
-        # Overview: scatter of effect vs rank
-        n = max(6, min(20, len(df)))
-        fig, (ax_overview, ax_zoom) = plt.subplots(
-            2,
-            1,
-            figsize=(10, max(6, len(df) * 0.18 + 1)),
-            gridspec_kw={"height_ratios": [1, 2]},
+    has_zoom = df_zoom is not None and df_zoom.shape[0] > 0
+
+    # --- Figure aufbauen ---
+    fig, ax_main = plt.subplots(figsize=(12, 6))
+
+    # --- Hauptplot: Wasserfall ---
+    mask_sel = df["label"].isin(sel_labels)
+    df_rest = df[~mask_sel]
+    df_highlighted = df[mask_sel]
+
+    # Alle Gene als kleine Punkte
+    ax_main.scatter(
+        df_rest["_x"],
+        df_rest["_y"],
+        c=_color_by_sign(df_rest[effect_col].values),
+        s=10,
+        alpha=0.4,
+    )
+
+    # Selected Gene hervorgehoben mit Labels
+    if not df_highlighted.empty:
+        ax_main.scatter(
+            df_highlighted["_x"],
+            df_highlighted["_y"],
+            c=_color_by_sign(df_highlighted[effect_col].values),
+            s=50,
+            alpha=0.9,
+            edgecolors="black",
+            linewidths=0.8,
+            zorder=5,
         )
-
-        # Overview scatter: show all ranks
-        ax_overview.scatter(df[effect_col], df["rank"], s=20, c="lightgray", alpha=0.7)
-
-        # Highlight zoomed range on overview
-        mask_zoom = (df["rank"] >= start_rank) & (df["rank"] < end_rank)
-        if mask_zoom.any():
-            ax_overview.scatter(
-                df.loc[mask_zoom, effect_col],
-                df.loc[mask_zoom, "rank"],
-                s=30,
-                c="darkred",
-                alpha=0.9,
-                edgecolors="black",
+        for _, row in df_highlighted.iterrows():
+            ax_main.annotate(
+                row["label"],
+                xy=(row["_x"], row["_y"]),
+                xytext=(4, 4),
+                textcoords="offset points",
+                fontsize=7,
+                alpha=0.85,
             )
 
-        ax_overview.invert_yaxis()
-        ax_overview.set_ylabel("Rank (0 = largest abs effect)")
-        ax_overview.set_title("Overview: effect size vs rank")
-        ax_overview.grid(axis="x", alpha=0.2)
-        ax_overview.axvline(center_x, color="gray", linestyle="--", alpha=0.7)
+    ax_main.axhline(center_y, color="gray", linestyle="--", alpha=0.6)
+    ax_main.set_xlabel("Rank")
+    ax_main.set_ylabel(y_label)
+    ax_main.set_title(f"Waterfall — {effect_col} by Rank ({ylabel} Labels)")
+    ax_main.grid(alpha=0.2)
 
-        # Zoomed-in barh for selected rank window
-        df_zoom = df[(df["rank"] >= start_rank) & (df["rank"] < end_rank)].copy()
-        if df_zoom.shape[0] == 0:
-            ax_zoom.text(0.5, 0.5, "No items in zoom range", ha="center", va="center")
-            ax_zoom.axis("off")
-        else:
-            # Order so that largest effect on top
-            df_zoom = df_zoom.sort_values(by=effect_col)
-            colors = _color_by_sign(df_zoom[effect_col].values)
-            y_positions = np.arange(len(df_zoom))
-            ax_zoom.barh(y_positions, df_zoom[effect_col].values, color=colors, edgecolor="black")
-            ax_zoom.set_yticks(y_positions)
-            ax_zoom.set_yticklabels(df_zoom["label"].values, fontsize=9)
-            ax_zoom.invert_yaxis()
-            ax_zoom.set_xlabel(effect_col)
-            ax_zoom.set_title(f"Zoom: ranks {start_rank}..{end_rank - 1}")
-            ax_zoom.axvline(center_x, color="gray", linestyle="--", alpha=0.7)
+    # --- Zoom-Inset ---
+    if has_zoom:
+        from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
 
-        fig.tight_layout()
-        return fig, (ax_overview, ax_zoom)
+        x_zoom = df_zoom["_x"].values
+        y_zoom = df_zoom["_y"].values
+        x_pad = max((x_zoom.max() - x_zoom.min()) * 0.3, 2.0)
+        y_pad = max((y_zoom.max() - y_zoom.min()) * 0.3, 0.05)
+        x1, x2 = x_zoom.min() - x_pad, x_zoom.max() + x_pad
+        y1, y2 = y_zoom.min() - y_pad, y_zoom.max() + y_pad
 
-    # No zoom: simple horizontal bar plot (labels on y-axis)
-    # Order bars so largest effect at top
-    df_plot = df.sort_values(by=effect_col)
-    colors = _color_by_sign(df_plot[effect_col].values)
-    fig, ax = plt.subplots(figsize=(8, max(4, len(df_plot) * 0.25)))
-    y_pos = np.arange(len(df_plot))
-    ax.barh(y_pos, df_plot[effect_col].values, color=colors, edgecolor="black")
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(df_plot["label"].values, fontsize=9)
-    ax.invert_yaxis()
-    ax.axvline(center_x, color="gray", linestyle="--", alpha=0.7)
-    ax.set_xlabel(effect_col)
-    ax.set_ylabel(ylabel)
-    ax.set_title(f"Effect Sizes with {ylabel} Labels")
-    ax.grid(axis="x", alpha=0.2)
+        # Inset-Position: oben links bei ascending (negative Effekte links),
+        # oben rechts bei descending
+        loc = "lower right" if ascending else "lower left"
+        ax_inset = inset_axes(ax_main, width="35%", height="40%", loc=loc)
 
-    return fig, ax
+        # Alle Punkte im Fenster plotten
+        df_in_window = df[
+            (df["_x"] >= x1)
+            & (df["_x"] <= x2)
+            & (df["_y"] >= y1)
+            & (df["_y"] <= y2)
+        ]
+        df_in_rest = df_in_window[~df_in_window["label"].isin(sel_labels)]
+        df_in_sel = df_in_window[df_in_window["label"].isin(sel_labels)]
+
+        ax_inset.scatter(
+            df_in_rest["_x"],
+            df_in_rest["_y"],
+            c=_color_by_sign(df_in_rest[effect_col].values),
+            s=15,
+            alpha=0.4,
+        )
+        ax_inset.scatter(
+            df_in_sel["_x"],
+            df_in_sel["_y"],
+            c=_color_by_sign(df_in_sel[effect_col].values),
+            s=40,
+            alpha=0.9,
+            edgecolors="black",
+            linewidths=0.8,
+            zorder=5,
+        )
+        for _, row in df_zoom.iterrows():
+            ax_inset.annotate(
+                row["label"],
+                xy=(row["_x"], row["_y"]),
+                xytext=(3, 3),
+                textcoords="offset points",
+                fontsize=7,
+            )
+
+        ax_inset.set_xlim(x1, x2)
+        ax_inset.set_ylim(y1, y2)
+        ax_inset.axhline(
+            center_y, color="gray", linestyle="--", alpha=0.5, lw=0.8
+        )
+        ax_inset.set_title(
+            f"{'top' if zoom_side == 'top' else 'bottom'} "
+            f"{len(df_zoom)} selected (ranks {start_rank}–{end_rank - 1})",
+            fontsize=8,
+        )
+        ax_inset.tick_params(labelsize=7)
+
+        mark_inset(
+            ax_main, ax_inset, loc1=2, loc2=4, fc="none", ec="gray", lw=0.8
+        )
+
+    fig.tight_layout()
+    return fig, ax_main
